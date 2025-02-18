@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:3000/api
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/zhi_chatbot
+      - REDIS_URL=redis://redis:6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - mongo
+      - redis
+
+  mongo:
+    image: mongo:4.4
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:6
+
+volumes:
+  mongo_data:
+

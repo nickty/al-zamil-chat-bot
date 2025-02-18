@@ -1,0 +1,21 @@
+{
+  "name": "zhi-chatbot-backend",
+  "version": "1.0.0",
+  "description": "Backend for ZHI Equipment Chatbot",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^5.12.3",
+    "ioredis": "^4.27.1",
+    "openai": "^3.2.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
+

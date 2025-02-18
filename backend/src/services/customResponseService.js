@@ -1,4 +1,4 @@
-const { CustomResponse } = require('../models/customResponse.js');
+const { CustomResponse } = require('../models/customResponse');
 
 async function addCustomResponse(keyword, response) {
   const newResponse = new CustomResponse({ keyword, response });

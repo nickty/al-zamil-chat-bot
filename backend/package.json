@@ -8,14 +8,14 @@
     "dev": "nodemon src/server.js"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^4.17.1",
-    "mongoose": "^5.12.3",
     "ioredis": "^4.27.1",
-    "openai": "^3.2.1",
-    "cors": "^2.8.5"
+    "mongoose": "^5.12.3",
+    "openai": "^3.2.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.7"
   }
 }
-

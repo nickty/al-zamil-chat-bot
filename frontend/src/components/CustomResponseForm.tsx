@@ -1,40 +1,46 @@
-import React, { useState } from 'react'
-import { addCustomResponse } from '../utils/api'
+"use client"
+
+import type React from "react"
+import { useState } from "react"
+import { addCustomResponse } from "../utils/api"
 
 const CustomResponseForm: React.FC = () => {
-  const [category, setCategory] = useState('')
-  const [keywords, setKeywords] = useState('')
-  const [response, setResponse] = useState('')
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [category, setCategory] = useState("")
+  const [keywords, setKeywords] = useState("")
+  const [response, setResponse] = useState("")
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
+    setError("")
+    setSuccess("")
 
     if (!category.trim() || !keywords.trim() || !response.trim()) {
-      setError('All fields are required')
+      setError("All fields are required")
       return
     }
 
     try {
-      const keywordsArray = keywords.split(',').map(k => k.trim()).filter(k => k !== '')
+      const keywordsArray = keywords
+        .split(",")
+        .map((k) => k.trim())
+        .filter((k) => k !== "")
       if (keywordsArray.length === 0) {
-        setError('At least one non-empty keyword is required')
+        setError("At least one non-empty keyword is required")
         return
       }
 
       await addCustomResponse(category.trim(), keywordsArray, response.trim())
-      setCategory('')
-      setKeywords('')
-      setResponse('')
-      setSuccess('Custom response added successfully!')
+      setCategory("")
+      setKeywords("")
+      setResponse("")
+      setSuccess("Custom response added successfully!")
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message)
       } else {
-        setError('An unexpected error occurred')
+        setError("An unexpected error occurred")
       }
     }
   }
@@ -42,10 +48,12 @@ const CustomResponseForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <h2 className="text-2xl font-semibold mb-4">Add Custom Response</h2>
-      {error && <div className="text-red-500">{error}</div>}
-      {success && <div className="text-green-500">{success}</div>}
+      {error && <div className="text-red-500 bg-red-100 p-2 rounded">{error}</div>}
+      {success && <div className="text-green-500 bg-green-100 p-2 rounded">{success}</div>}
       <div>
-        <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
+        <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+          Category
+        </label>
         <input
           type="text"
           id="category"
@@ -56,7 +64,9 @@ const CustomResponseForm: React.FC = () => {
         />
       </div>
       <div>
-        <label htmlFor="keywords" className="block text-sm font-medium text-gray-700">Keywords (comma-separated)</label>
+        <label htmlFor="keywords" className="block text-sm font-medium text-gray-700">
+          Keywords (comma-separated)
+        </label>
         <input
           type="text"
           id="keywords"
@@ -67,7 +77,9 @@ const CustomResponseForm: React.FC = () => {
         />
       </div>
       <div>
-        <label htmlFor="response" className="block text-sm font-medium text-gray-700">Response</label>
+        <label htmlFor="response" className="block text-sm font-medium text-gray-700">
+          Response
+        </label>
         <textarea
           id="response"
           value={response}
@@ -77,7 +89,10 @@ const CustomResponseForm: React.FC = () => {
           required
         ></textarea>
       </div>
-      <button type="submit" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+      <button
+        type="submit"
+        className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      >
         Add Custom Response
       </button>
     </form>
@@ -85,3 +100,4 @@ const CustomResponseForm: React.FC = () => {
 }
 
 export default CustomResponseForm
+

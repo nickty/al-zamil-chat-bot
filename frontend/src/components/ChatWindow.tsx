@@ -7,13 +7,17 @@ interface Message {
 }
 
 interface ChatWindowProps {
-  initialHistory: Message[]
+  chatHistory: Message[]
 }
 
-export default function ChatWindow({ initialHistory }: ChatWindowProps) {
-  const [messages, setMessages] = useState<Message[]>(initialHistory)
+export default function ChatWindow({ chatHistory }: ChatWindowProps) {
+  const [messages, setMessages] = useState<Message[]>(chatHistory)
   const [input, setInput] = useState('')
   const [suggestions, setSuggestions] = useState<string[]>([])
+
+  useEffect(() => {
+    setMessages(chatHistory)
+  }, [chatHistory])
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -37,7 +41,7 @@ export default function ChatWindow({ initialHistory }: ChatWindowProps) {
     if (!input.trim()) return
 
     const userMessage: Message = { role: 'user', content: input }
-    setMessages([...messages, userMessage])
+    setMessages(prevMessages => [...prevMessages, userMessage])
     setInput('')
     setSuggestions([])
 

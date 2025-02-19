@@ -27,8 +27,10 @@ export async function addCustomResponse(category: string, keywords: string[], re
     const result = await axios.post(`${API_URL}/custom-responses`, { category, keywords, response })
     return result.data
   } catch (error) {
-    console.error('Error adding custom response:', error)
-    throw error
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.error || 'An error occurred while adding the custom response');
+    }
+    throw error;
   }
 }
 

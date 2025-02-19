@@ -6,14 +6,15 @@ const router = express.Router();
 router.post('/', async (req, res, next) => {
   try {
     const { category, keywords, response } = req.body;
+    
+    if (!category || !keywords || !response) {
+      return res.status(400).json({ error: 'Category, keywords, and response are required' });
+    }
+
     const newResponse = await addCustomResponse(category, keywords, response);
     res.status(201).json(newResponse);
   } catch (error) {
-    if (error.message.includes('keywords already exist')) {
-      res.status(400).json({ error: error.message });
-    } else {
-      next(error);
-    }
+    res.status(400).json({ error: error.message });
   }
 });
 

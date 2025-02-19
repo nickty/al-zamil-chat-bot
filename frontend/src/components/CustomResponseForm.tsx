@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { addCustomResponse } from '../utils/api'
 
-const AddCustomResponse: React.FC = () => {
+const CustomResponseForm: React.FC = () => {
   const [category, setCategory] = useState('')
   const [keywords, setKeywords] = useState('')
   const [response, setResponse] = useState('')
@@ -41,6 +41,7 @@ const AddCustomResponse: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <h2 className="text-2xl font-semibold mb-4">Add Custom Response</h2>
       {error && <div className="text-red-500">{error}</div>}
       {success && <div className="text-green-500">{success}</div>}
       <div>
@@ -83,4 +84,4 @@ const AddCustomResponse: React.FC = () => {
   )
 }
 
-export default AddCustomResponse
+export default CustomResponseForm

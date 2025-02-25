@@ -1,7 +1,9 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
-import { sendMessage, getSuggestions } from "../utils/api"
+import React, { useState, useEffect, useRef, useCallback } from "react"
+import { sendMessage, getSuggestions } from "@/utils/api"
+import { Input } from "./ui/input"
+import { Button } from "./ui/button"
 
 interface Message {
   _id: string
@@ -12,82 +14,86 @@ interface Message {
 
 interface ChatWindowProps {
   chatHistory: Message[]
+  onHistoryUpdate: (history: Message[]) => void
 }
 
-export default function ChatWindow({ chatHistory }: ChatWindowProps) {
-  const [messages, setMessages] = useState<Message[]>(chatHistory)
+export default function ChatWindow({ chatHistory, onHistoryUpdate }: ChatWindowProps) {
   const [input, setInput] = useState("")
   const [suggestions, setSuggestions] = useState<string[]>([])
-  const chatContainerRef = useRef<HTMLDivElement>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    setMessages(chatHistory)
-  }, [chatHistory])
+  const scrollToBottom = useCallback(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight
+    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [])
 
+  // Scroll to bottom when chat history changes
   useEffect(() => {
     scrollToBottom()
-  }, [messages]) // Removed unnecessary dependency: messages
+  }, [scrollToBottom, suggestions])
 
+  // Fetch suggestions while typing
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (input.trim()) {
-        const fetchedSuggestions = await getSuggestions(input)
-        setSuggestions(fetchedSuggestions)
+        try {
+          const fetchedSuggestions = await getSuggestions(input)
+          setSuggestions(fetchedSuggestions)
+        } catch (error) {
+          console.error("Error fetching suggestions:", error)
+          setSuggestions([])
+        }
       } else {
         setSuggestions([])
       }
     }
 
-    const debounce = setTimeout(() => {
+    const debounceTimer = setTimeout(() => {
       fetchSuggestions()
     }, 300)
 
-    return () => clearTimeout(debounce)
+    return () => clearTimeout(debounceTimer)
   }, [input])
 
-  const scrollToBottom = () => {
-    console.log("bottom", chatContainerRef.current?.scrollHeight);
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
-    }
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
 
-  const handleSubmit = async () => {
-    if (!input.trim()) return
-
+    setIsLoading(true)
     const userMessage: Message = {
       _id: Date.now().toString(),
       userMessage: input,
       aiResponse: "",
       timestamp: new Date().toISOString(),
     }
-    setMessages((prevMessages) => [userMessage, ...prevMessages])
+
+    // Update with user message immediately
+    const updatedHistory = [...chatHistory, userMessage]
+    onHistoryUpdate(updatedHistory)
     setInput("")
     setSuggestions([])
+    scrollToBottom()
 
-    const assistantMessage = await sendMessage(input)
-    setMessages((prevMessages) => [
-      {
+    try {
+      const assistantMessage = await sendMessage(input)
+      const newMessage: Message = {
         _id: (Date.now() + 1).toString(),
         userMessage: "",
         aiResponse: assistantMessage.content,
         timestamp: new Date().toISOString(),
-      },
-      ...prevMessages,
-    ])
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      handleSubmit()
-    } else if (e.key === "Tab") {
-      e.preventDefault()
-      if (suggestions.length > 0) {
-        setInput(suggestions[0])
-        setSuggestions([])
       }
+      // Update with AI response
+      onHistoryUpdate([...updatedHistory, newMessage])
+      scrollToBottom()
+    } catch (error) {
+      console.error("Error sending message:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -99,53 +105,60 @@ export default function ChatWindow({ chatHistory }: ChatWindowProps) {
 
   return (
     <div className="flex flex-col h-[600px]">
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4" ref={chatContainerRef}>
-        {messages
-          .slice()
-          .reverse()
-          .map((message) => (
+      <div className="flex-1 overflow-y-auto pr-4" ref={scrollAreaRef}>
+        <div className="space-y-4">
+          {chatHistory.map((message) => (
             <React.Fragment key={message._id}>
               {message.userMessage && (
-                <div className="p-3 rounded-lg bg-gray-100 mr-4">
-                  <strong>You: </strong>
-                  {message.userMessage}
+                <div className="flex justify-end">
+                  <div className="bg-primary text-primary-foreground rounded-lg px-4 py-2 max-w-[80%]">
+                    {message.userMessage}
+                  </div>
                 </div>
               )}
               {message.aiResponse && (
-                <div className="p-3 rounded-lg bg-blue-100 ml-4">
-                  <strong>Assistant: </strong>
-                  {message.aiResponse}
+                <div className="flex justify-start">
+                  <div className="bg-muted rounded-lg px-4 py-2 max-w-[80%]">{message.aiResponse}</div>
                 </div>
               )}
             </React.Fragment>
           ))}
+          {/* Invisible div for scrolling */}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
-      <div className="relative">
-        <input
-          ref={inputRef}
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="w-full p-3 pr-20 border rounded-lg"
-          placeholder="Ask about our equipment..."
-        />
-        <button onClick={handleSubmit} className="absolute right-2 top-2 bg-blue-500 text-white px-4 py-1 rounded">
-          Send
-        </button>
-        {suggestions.length > 0 && (
-          <ul className="absolute left-0 right-0 bottom-full mb-1 bg-white shadow-md rounded-lg max-h-40 overflow-y-auto z-10">
-            {suggestions.map((suggestion, index) => (
-              <li
-                key={index}
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => handleSuggestionClick(suggestion)}
-              >
-                {suggestion}
-              </li>
-            ))}
-          </ul>
-        )}
+
+      <div className="relative mt-4">
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <div className="relative flex-1">
+            <Input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your message..."
+              className="pr-20"
+              disabled={isLoading}
+              autoComplete="off"
+            />
+            {suggestions.length > 0 && (
+              <ul className="absolute left-0 right-0 bottom-full mb-1 bg-popover border rounded-lg shadow-lg max-h-40 overflow-y-auto z-10">
+                {suggestions.map((suggestion, index) => (
+                  <li
+                    key={index}
+                    className="px-4 py-2 hover:bg-muted cursor-pointer"
+                    onClick={() => handleSuggestionClick(suggestion)}
+                  >
+                    {suggestion}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Sending..." : "Send"}
+          </Button>
+        </form>
       </div>
     </div>
   )

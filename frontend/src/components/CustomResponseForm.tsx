@@ -1,10 +1,16 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
-import { addCustomResponse } from "../utils/api"
 
-const CustomResponseForm: React.FC = () => {
+import { useState } from "react"
+import { addCustomResponse } from "@/utils/api"
+import { Button } from "./ui/button"
+import { Input } from "./ui/input"
+import { Textarea } from "./ui/textarea"
+import { Label } from "./ui/label"
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
+
+export default function CustomResponseForm() {
   const [category, setCategory] = useState("")
   const [keywords, setKeywords] = useState("")
   const [response, setResponse] = useState("")
@@ -26,6 +32,7 @@ const CustomResponseForm: React.FC = () => {
         .split(",")
         .map((k) => k.trim())
         .filter((k) => k !== "")
+
       if (keywordsArray.length === 0) {
         setError("At least one non-empty keyword is required")
         return
@@ -46,58 +53,52 @@ const CustomResponseForm: React.FC = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-2xl font-semibold mb-4">Add Custom Response</h2>
-      {error && <div className="text-red-500 bg-red-100 p-2 rounded">{error}</div>}
-      {success && <div className="text-green-500 bg-green-100 p-2 rounded">{success}</div>}
-      <div>
-        <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-          Category
-        </label>
-        <input
-          type="text"
-          id="category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          required
-        />
-      </div>
-      <div>
-        <label htmlFor="keywords" className="block text-sm font-medium text-gray-700">
-          Keywords (comma-separated)
-        </label>
-        <input
-          type="text"
-          id="keywords"
-          value={keywords}
-          onChange={(e) => setKeywords(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          required
-        />
-      </div>
-      <div>
-        <label htmlFor="response" className="block text-sm font-medium text-gray-700">
-          Response
-        </label>
-        <textarea
-          id="response"
-          value={response}
-          onChange={(e) => setResponse(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          rows={4}
-          required
-        ></textarea>
-      </div>
-      <button
-        type="submit"
-        className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-      >
-        Add Custom Response
-      </button>
-    </form>
+    <Card>
+      <CardHeader>
+        <CardTitle>Add Custom Response</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && <div className="p-3 text-red-500 bg-red-50 rounded-md">{error}</div>}
+          {success && <div className="p-3 text-green-500 bg-green-50 rounded-md">{success}</div>}
+
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Input
+              id="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="e.g., Product Information"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="keywords">Keywords (comma-separated)</Label>
+            <Input
+              id="keywords"
+              value={keywords}
+              onChange={(e) => setKeywords(e.target.value)}
+              placeholder="e.g., pressure vessel, tank, container"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="response">Response</Label>
+            <Textarea
+              id="response"
+              value={response}
+              onChange={(e) => setResponse(e.target.value)}
+              placeholder="Enter the response text..."
+              rows={4}
+            />
+          </div>
+
+          <Button type="submit" className="w-full">
+            Add Response
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }
-
-export default CustomResponseForm
 

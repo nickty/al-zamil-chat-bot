@@ -1,98 +1,76 @@
-const { CustomResponse } = require("../models/customResponse");
+const { CustomResponse } = require("../models/customResponse")
 
-async function addCustomResponse(category, keywords, response) {
-  if (!category || typeof category !== "string" || category.trim() === "") {
-    throw new Error("Category is required and must be a non-empty string");
-  }
-
-  if (!Array.isArray(keywords) || keywords.length === 0) {
-    throw new Error("Keywords must be a non-empty array");
-  }
-
-  const cleanedKeywords = keywords.filter(
-    (keyword) => keyword != null && keyword !== ""
-  );
-
-  if (cleanedKeywords.length === 0) {
-    throw new Error("At least one non-empty keyword is required");
-  }
-
-  if (!response || typeof response !== "string" || response.trim() === "") {
-    throw new Error("Response is required and must be a non-empty string");
-  }
-
+async function addCustomResponse(category, keywords, response, userId) {
   try {
-    // Check for existing keywords
-    const existingKeywords = await CustomResponse.find({
-      keywords: { $in: cleanedKeywords },
-    });
-
-    if (existingKeywords.length > 0) {
-      const duplicates = existingKeywords.flatMap((doc) =>
-        doc.keywords.filter((k) => cleanedKeywords.includes(k))
-      );
-      throw new Error(
-        `The following keywords already exist: ${duplicates.join(
-          ", "
-        )}. Please use unique keywords.`
-      );
+    // Validate keywords array
+    if (!Array.isArray(keywords) || keywords.length === 0) {
+      throw new Error("Keywords must be a non-empty array")
     }
 
-    // console.log(CustomResponse.getIndexes());
+    // Clean and normalize keywords
+    const cleanedKeywords = keywords.map((k) => k.trim().toLowerCase()).filter((k) => k.length > 0)
 
-    const newResponse = new CustomResponse({
-      category,
-      keywords: cleanedKeywords,
-      response,
-    });
+    // Remove duplicates
+    const uniqueKeywords = [...new Set(cleanedKeywords)]
 
-    try {
-      await newResponse.save();
-      return newResponse;
-    } catch (error) {
-      console.error("Error saving new response:", error);
-      throw error;
-    }
+    const newResponse = await CustomResponse.create({
+      userId,
+      category: category.trim(),
+      keywords: uniqueKeywords,
+      response: response.trim(),
+    })
+
+    return newResponse
   } catch (error) {
-    if (error.name === "MongoError" && error.code === 11000) {
-      throw new Error(
-        "One or more keywords already exist. Please use unique keywords."
-      );
-    }
-    throw error;
+    console.error("Error adding custom response:", error)
+    throw error
   }
 }
 
-async function getCustomResponse(message) {
-  const words = message.toLowerCase().split(" ");
-  const customResponse = await CustomResponse.findOne({
-    keywords: { $in: words },
-  });
-
-  return customResponse ? customResponse.response : null;
+async function getAllCustomResponses(userId) {
+  try {
+    return await CustomResponse.find({ userId }).sort({ createdAt: -1 })
+  } catch (error) {
+    console.error("Error getting custom responses:", error)
+    throw error
+  }
 }
 
-async function getAllCustomResponses() {
-  return CustomResponse.find();
-}
+async function getSuggestions(input, userId) {
+  try {
+    if (!input) {
+      return []
+    }
 
-async function getSuggestions(partialInput) {
-  const words = partialInput.toLowerCase().split(" ");
-  const lastWord = words[words.length - 1];
+    const lowercaseInput = input.toLowerCase()
 
-  const suggestions = await CustomResponse.aggregate([
-    { $unwind: "$keywords" },
-    { $match: { keywords: { $regex: `^${lastWord}`, $options: "i" } } },
-    { $group: { _id: "$keywords" } },
-    { $limit: 5 },
-  ]);
+    // Find custom responses where any keyword matches the input
+    const responses = await CustomResponse.find({
+      userId,
+      keywords: {
+        $elemMatch: {
+          $regex: new RegExp(lowercaseInput, "i"),
+        },
+      },
+    }).limit(5)
 
-  return suggestions.map((s) => s._id);
+    // Extract matching keywords from the responses
+    const suggestions = responses.reduce((acc, response) => {
+      const matchingKeywords = response.keywords.filter((keyword) => keyword.toLowerCase().includes(lowercaseInput))
+      return [...acc, ...matchingKeywords]
+    }, [])
+
+    // Remove duplicates and limit to 5 suggestions
+    return [...new Set(suggestions)].slice(0, 5)
+  } catch (error) {
+    console.error("Error getting suggestions:", error)
+    throw error
+  }
 }
 
 module.exports = {
   addCustomResponse,
-  getCustomResponse,
   getAllCustomResponses,
   getSuggestions,
-};
+}
+

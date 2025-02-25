@@ -1,6 +1,7 @@
 # Dependencies
 /backend/node_modules/
 /frontend/node_modules/
+/backend/serviceAccountKey.json
 
 # Environment variables
 .env

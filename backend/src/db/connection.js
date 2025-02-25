@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 async function connectDB() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
+    await mongoose.connect("mongodb://localhost:27017/zhi_chatbot", {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       useCreateIndex: true,

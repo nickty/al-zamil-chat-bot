@@ -1,27 +1,20 @@
-const express = require('express');
-const cors = require('cors');
-const chatRouter = require('./routes/chat');
-const customResponseRouter = require('./routes/customResponse');
-const errorHandler = require('./middleware/errorHandler');
-require('dotenv').config();
-
-const app = express();
-
-// Middleware
-app.use(cors('*'));
-app.use(express.json());
-
-// app.use('/api', (req, res) => {
-//     res.json("hello");
-// })
+const express = require("express")
+const cors = require("cors")
+const { authRouter } = require("./routes/auth")
+const { chatRouter } = require("./routes/chat")
+const customResponseRouter = require("./routes/customResponse")
+const { errorHandler } = require("./middleware/errorHandler")
 
 
-// Routes
-app.use('/api/chat', chatRouter);
-app.use('/api/custom-responses', customResponseRouter);
+const app = express()
 
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(express.json())
 
-// Error handling middleware
-app.use(errorHandler);
+app.use("/api/auth", authRouter)
+app.use("/api/chat", chatRouter)
+app.use("/api/custom-responses", customResponseRouter)
 
-module.exports = app;
+app.use(errorHandler)
+
+module.exports = app

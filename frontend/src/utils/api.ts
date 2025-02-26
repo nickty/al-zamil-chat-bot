@@ -65,13 +65,27 @@ export async function getSuggestions(input: string) {
   }
 }
 
-export async function addCustomResponse(category: string, keywords: string[], response: string) {
+export async function addCustomResponse(formData: FormData) {
   try {
-    const result = await api.post("/custom-responses", { category, keywords, response })
-    return result.data
+    const response = await api.post("/custom-responses", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+
+    if (!response.data) {
+      throw new Error("No data received from server")
+    }
+
+    return response.data
   } catch (error) {
-    console.error("Error adding custom response:", error)
+    if (axios.isAxiosError(error) && error.response?.data?.error) {
+      throw new Error(error.response.data.error)
+    }
     throw error
   }
 }
 
+export function getAttachmentUrl(responseId: string, filename: string) {
+  return `${API_URL}/custom-responses/attachment/${responseId}/${filename}`
+}

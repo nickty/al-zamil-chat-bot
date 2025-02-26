@@ -2,6 +2,7 @@ import type React from "react"
 import { Inter } from "next/font/google"
 import { AuthProvider } from "@/components/AuthProvider"
 import Navbar from "@/components/Navbar"
+import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <Navbar />
           <main>{children}</main>
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

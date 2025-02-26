@@ -170,7 +170,7 @@ export default function CustomResponseForm() {
                 Upload Files
               </Button>
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                Max file size: 5MB. Supported formats: Images, PDF, Excel
+                Max file size: 5MB. Supported formats: Images, PDF, Word, Excel, PowerPoint, CSV, TXT
               </p>
             </div>
 

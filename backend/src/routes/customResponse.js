@@ -23,26 +23,35 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
+      // Images
       "image/jpeg",
       "image/png",
       "image/gif",
+      // Documents
       "application/pdf",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/msword", // .doc
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+      "application/vnd.ms-excel", // .xls
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+      "text/csv", // .csv
+      "application/vnd.ms-powerpoint", // .ppt
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
+      "text/plain", // .txt
     ]
 
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true)
     } else {
-      cb(new Error("Invalid file type. Only images, PDFs, and Excel files are allowed."), false)
+      cb(
+        new Error("Invalid file type. Only images, documents (PDF, Word, Excel, PowerPoint, CSV, TXT) are allowed."),
+        false,
+      )
     }
   },
 })
-
 // Apply auth middleware to all routes
 router.use(authMiddleware)
 
-// Handle multiple files upload with custom response
 router.post("/", upload.array("attachments", 5), async (req, res) => {
   try {
     console.log("Request body:", req.body)

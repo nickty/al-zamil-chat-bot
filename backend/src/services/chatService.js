@@ -11,8 +11,13 @@ async function generateResponse(message, userId) {
           userId,
           userMessage: message,
           aiResponse: cr.response,
+          attachments: cr.attachments, // Include attachments in chat history
         })
-        return { role: "assistant", content: cr.response }
+        return {
+          role: "assistant",
+          content: cr.response,
+          attachments: cr.attachments, // Include attachments in response
+        }
       }
     }
 

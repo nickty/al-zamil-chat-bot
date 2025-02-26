@@ -5,17 +5,28 @@ import { useAuth } from "./AuthProvider"
 import { Button } from "./ui/button"
 import { signOut } from "@/utils/auth"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
+import { LogOut, Settings } from "lucide-react"
 
 export default function Navbar() {
   const { user, loading, setUser } = useAuth()
   const router = useRouter()
 
   const handleSignOut = async () => {
-    await signOut()
-    setUser(null)
-    router.push("/")
+    try {
+      await signOut()
+      setUser(null)
+      router.push("/")
+    } catch (error) {
+      console.error("Error signing out:", error)
+    }
   }
 
   return (
@@ -46,10 +57,20 @@ export default function Navbar() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem className="font-medium">{user.name}</DropdownMenuItem>
                 <DropdownMenuItem className="text-muted-foreground">{user.email}</DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/custom-responses" className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Manage Responses</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign Out</span>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}

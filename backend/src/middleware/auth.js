@@ -1,7 +1,6 @@
 const admin = require("../config/firebase-admin")
 const { User } = require("../models/user")
 
-// Export the middleware function directly
 const authMiddleware = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split("Bearer ")[1]
@@ -12,6 +11,18 @@ const authMiddleware = async (req, res, next) => {
 
     try {
       const decodedToken = await admin.auth().verifyIdToken(token)
+
+      // Check token expiration
+      const tokenExp = decodedToken.exp * 1000 // Convert to milliseconds
+      const now = Date.now()
+
+      if (tokenExp < now) {
+        return res.status(401).json({
+          message: "Token expired",
+          code: "auth/id-token-expired",
+        })
+      }
+
       let user = await User.findOne({ googleId: decodedToken.sub })
 
       if (!user) {
@@ -27,6 +38,15 @@ const authMiddleware = async (req, res, next) => {
       next()
     } catch (verifyError) {
       console.error("Token verification failed:", verifyError)
+
+      // Send specific error for expired tokens
+      if (verifyError.code === "auth/id-token-expired") {
+        return res.status(401).json({
+          message: "Token expired",
+          code: "auth/id-token-expired",
+        })
+      }
+
       return res.status(401).json({ message: "Invalid token" })
     }
   } catch (error) {
@@ -35,6 +55,5 @@ const authMiddleware = async (req, res, next) => {
   }
 }
 
-// Export the middleware function as default
 module.exports = authMiddleware
 

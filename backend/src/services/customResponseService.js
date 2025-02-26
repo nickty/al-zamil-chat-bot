@@ -10,6 +10,17 @@ async function addCustomResponse(category, keywords, response, userId, attachmen
     const cleanedKeywords = keywords.map((k) => k.trim().toLowerCase()).filter((k) => k.length > 0)
     const uniqueKeywords = [...new Set(cleanedKeywords)]
 
+    // Check for existing keywords
+    const existingResponse = await CustomResponse.findOne({
+      userId,
+      keywords: { $in: uniqueKeywords },
+    })
+
+    if (existingResponse) {
+      const conflictingKeywords = existingResponse.keywords.filter((k) => uniqueKeywords.includes(k)).join(", ")
+      throw new Error(`Keywords already exist: ${conflictingKeywords}`)
+    }
+
     const newResponse = await CustomResponse.create({
       userId,
       category: category.trim(),

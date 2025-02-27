@@ -8,7 +8,7 @@ const {
   getAttachment,
 } = require("../services/customResponseService")
 const { uploadFile, deleteFile } = require("../services/storageService")
-const CustomResponse = require("../models/customResponse") // Import the CustomResponse model
+const {CustomResponse} = require("../models/customResponse") // Import the CustomResponse model
 
 const router = express.Router()
 
@@ -175,6 +175,8 @@ router.put("/:id", adminMiddleware, upload.array("attachments", 5), async (req, 
   try {
     const { category, keywords, response, existingAttachments } = req.body
     const files = req.files || []
+
+    console.log("check id", req.params.id);
 
     const existingResponse = await CustomResponse.findById(req.params.id)
     if (!existingResponse) {

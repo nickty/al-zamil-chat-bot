@@ -151,3 +151,37 @@ export function getAttachmentUrl(responseId: string, filename: string) {
   return `${API_URL}/custom-responses/attachment/${responseId}/${filename}`
 }
 
+export async function getAllCustomResponses() {
+  try {
+    const response = await api.get("/custom-responses")
+    return response.data
+  } catch (error) {
+    console.error("Error fetching custom responses:", error)
+    throw error
+  }
+}
+
+export async function deleteCustomResponse(id: string) {
+  try {
+    const response = await api.delete(`/custom-responses/${id}`)
+    return response.data
+  } catch (error) {
+    console.error("Error deleting custom response:", error)
+    throw error
+  }
+}
+
+export async function updateCustomResponse(id: string, formData: FormData) {
+  try {
+    const response = await api.put(`/custom-responses/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+    return response.data
+  } catch (error) {
+    console.error("Error updating custom response:", error)
+    throw error
+  }
+}
+

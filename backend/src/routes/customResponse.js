@@ -8,6 +8,7 @@ const {
   getAttachment,
 } = require("../services/customResponseService")
 const { uploadFile, deleteFile } = require("../services/storageService")
+const CustomResponse = require("../models/customResponse") // Import the CustomResponse model
 
 const router = express.Router()
 
@@ -136,6 +137,118 @@ router.get("/attachment/:id/:filename", async (req, res) => {
   } catch (error) {
     console.error("Error getting attachment:", error)
     res.status(500).json({ error: "Failed to get attachment" })
+  }
+})
+
+// Delete custom response
+router.delete("/:id", adminMiddleware, async (req, res) => {
+  try {
+    const response = await CustomResponse.findById(req.params.id)
+
+    if (!response) {
+      return res.status(404).json({ error: "Response not found" })
+    }
+
+    // Delete attachments from Cloudinary
+    if (response.attachments && response.attachments.length > 0) {
+      for (const attachment of response.attachments) {
+        try {
+          await deleteFile(attachment.filename)
+        } catch (deleteError) {
+          console.error("Error deleting file from Cloudinary:", deleteError)
+        }
+      }
+    }
+
+    // Delete the response from database
+    await CustomResponse.findByIdAndDelete(req.params.id)
+
+    res.json({ message: "Response deleted successfully" })
+  } catch (error) {
+    console.error("Error deleting custom response:", error)
+    res.status(500).json({ error: "Failed to delete response" })
+  }
+})
+
+// Update custom response
+router.put("/:id", adminMiddleware, upload.array("attachments", 5), async (req, res) => {
+  try {
+    const { category, keywords, response, existingAttachments } = req.body
+    const files = req.files || []
+
+    const existingResponse = await CustomResponse.findById(req.params.id)
+    if (!existingResponse) {
+      return res.status(404).json({ error: "Response not found" })
+    }
+
+    let parsedKeywords
+    try {
+      parsedKeywords = JSON.parse(keywords)
+      if (!Array.isArray(parsedKeywords)) {
+        throw new Error("Keywords must be an array")
+      }
+    } catch (e) {
+      return res.status(400).json({ error: "Invalid keywords format" })
+    }
+
+    // Handle existing attachments
+    let parsedExistingAttachments = []
+    try {
+      parsedExistingAttachments = existingAttachments ? JSON.parse(existingAttachments) : []
+    } catch (e) {
+      console.error("Error parsing existing attachments:", e)
+      parsedExistingAttachments = []
+    }
+
+    // Delete removed attachments from Cloudinary
+    const removedAttachments = existingResponse.attachments.filter(
+      (att) => !parsedExistingAttachments.find((existing) => existing.filename === att.filename),
+    )
+
+    for (const attachment of removedAttachments) {
+      try {
+        await deleteFile(attachment.filename)
+      } catch (deleteError) {
+        console.error("Error deleting file from Cloudinary:", deleteError)
+      }
+    }
+
+    // Upload new files
+    const newAttachments = []
+    for (const file of files) {
+      try {
+        const uploadedFile = await uploadFile(file, req.user._id)
+        newAttachments.push(uploadedFile)
+      } catch (error) {
+        console.error("File upload error:", error)
+        // Clean up any files that were already uploaded
+        for (const attachment of newAttachments) {
+          try {
+            await deleteFile(attachment.filename)
+          } catch (deleteError) {
+            console.error("Error deleting file after upload failure:", deleteError)
+          }
+        }
+        return res.status(400).json({ error: `File upload failed: ${error.message}` })
+      }
+    }
+
+    // Update the response
+    const updatedResponse = await CustomResponse.findByIdAndUpdate(
+      req.params.id,
+      {
+        category: category.trim(),
+        keywords: parsedKeywords,
+        response: response.trim(),
+        attachments: [...parsedExistingAttachments, ...newAttachments],
+      },
+      { new: true },
+    )
+
+    res.json(updatedResponse)
+  } catch (error) {
+    console.error("Error updating custom response:", error)
+    res.status(400).json({ error: error.message })
   }
 })
 

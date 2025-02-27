@@ -38,9 +38,14 @@ export default function Navbar() {
           </Link>
           {/* Only show Manage Responses link for admin users */}
           {user?.role === "admin" && (
-            <Link href="/custom-responses" className="text-sm text-muted-foreground hover:text-foreground">
-              Manage Responses
-            </Link>
+            <>
+              <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
+                Admin Dashboard
+              </Link>
+              <Link href="/custom-responses" className="text-sm text-muted-foreground hover:text-foreground">
+                Manage Responses
+              </Link>
+            </>
           )}
         </div>
         <div>

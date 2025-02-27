@@ -6,6 +6,7 @@ export interface User {
   name: string
   email: string
   picture: string
+  role?: "user" | "admin"
 }
 
 const AUTH_KEY = "zhi_auth_user"

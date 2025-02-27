@@ -36,7 +36,8 @@ export default function Navbar() {
           <Link href="/" className="text-xl font-bold">
             ZHI Assistant
           </Link>
-          {user && (
+          {/* Only show Manage Responses link for admin users */}
+          {user?.role === "admin" && (
             <Link href="/custom-responses" className="text-sm text-muted-foreground hover:text-foreground">
               Manage Responses
             </Link>
@@ -61,12 +62,15 @@ export default function Navbar() {
                 <DropdownMenuItem className="font-medium">{user.name}</DropdownMenuItem>
                 <DropdownMenuItem className="text-muted-foreground">{user.email}</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/custom-responses" className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Manage Responses</span>
-                  </Link>
-                </DropdownMenuItem>
+                {/* Only show Manage Responses option for admin users */}
+                {user?.role === "admin" && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/custom-responses" className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Manage Responses</span>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sign Out</span>

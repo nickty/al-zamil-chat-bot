@@ -12,7 +12,6 @@ async function addCustomResponse(category, keywords, response, userId, attachmen
 
     // Check for existing keywords
     const existingResponse = await CustomResponse.findOne({
-      userId,
       keywords: { $in: uniqueKeywords },
     })
 
@@ -48,16 +47,17 @@ async function addCustomResponse(category, keywords, response, userId, attachmen
   }
 }
 
-async function getAllCustomResponses(userId) {
+async function getAllCustomResponses() {
   try {
-    return await CustomResponse.find({ userId }).sort({ createdAt: -1 })
+    // Get all custom responses without userId filter
+    return await CustomResponse.find().sort({ createdAt: -1 })
   } catch (error) {
     console.error("Error getting custom responses:", error)
     throw error
   }
 }
 
-async function getSuggestions(query, userId) {
+async function getSuggestions(query) {
   try {
     if (!query || typeof query !== "string") {
       return []
@@ -65,8 +65,8 @@ async function getSuggestions(query, userId) {
 
     const lowercaseQuery = query.toLowerCase()
 
+    // Find responses where any keyword matches the query
     const responses = await CustomResponse.find({
-      userId,
       keywords: {
         $elemMatch: {
           $regex: new RegExp(escapeRegExp(lowercaseQuery), "i"),
@@ -74,11 +74,13 @@ async function getSuggestions(query, userId) {
       },
     }).limit(5)
 
+    // Extract matching keywords from responses
     const suggestions = responses.reduce((acc, response) => {
       const matchingKeywords = response.keywords.filter((keyword) => keyword.toLowerCase().includes(lowercaseQuery))
       return [...acc, ...matchingKeywords]
     }, [])
 
+    // Return unique suggestions, limited to 5
     return [...new Set(suggestions)].slice(0, 5)
   } catch (error) {
     console.error("Error getting suggestions:", error)
@@ -86,11 +88,10 @@ async function getSuggestions(query, userId) {
   }
 }
 
-async function getAttachment(responseId, filename, userId) {
+async function getAttachment(responseId, filename) {
   try {
     const response = await CustomResponse.findOne({
       _id: responseId,
-      userId,
       "attachments.filename": filename,
     })
 

@@ -3,20 +3,20 @@ const { CustomResponse } = require("../models/customResponse")
 
 async function generateResponse(message, userId) {
   try {
-    // First, check for custom responses
-    const customResponses = await CustomResponse.find({ userId })
+    // Check all custom responses without userId filter
+    const customResponses = await CustomResponse.find()
     for (const cr of customResponses) {
       if (cr.keywords.some((keyword) => message.toLowerCase().includes(keyword.toLowerCase()))) {
         const chatEntry = await ChatHistory.create({
           userId,
           userMessage: message,
           aiResponse: cr.response,
-          attachments: cr.attachments, // Include attachments in chat history
+          attachments: cr.attachments,
         })
         return {
           role: "assistant",
           content: cr.response,
-          attachments: cr.attachments, // Include attachments in response
+          attachments: cr.attachments,
         }
       }
     }

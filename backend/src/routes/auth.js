@@ -58,6 +58,7 @@ router.post("/verify-token", async (req, res) => {
           email: user.email,
           name: user.name,
           picture: user.picture,
+          role: user.role, // Add this line
         },
       })
     } catch (verifyError) {

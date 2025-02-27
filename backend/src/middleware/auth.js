@@ -16,7 +16,7 @@ const authMiddleware = async (req, res, next) => {
       const decodedToken = await admin.auth().verifyIdToken(token)
 
       // Check token expiration with 5-minute buffer
-      const tokenExp = decodedToken.exp * 1000 // Convert to milliseconds
+      const tokenExp = decodedToken.exp * 1000
       const now = Date.now()
       const fiveMinutes = 5 * 60 * 1000
 
@@ -27,15 +27,16 @@ const authMiddleware = async (req, res, next) => {
         })
       }
 
-      // Find or create user
       let user = await User.findOne({ googleId: decodedToken.sub })
 
       if (!user) {
+        // Set role as 'user' by default
         user = await User.create({
           email: decodedToken.email,
           name: decodedToken.name,
           picture: decodedToken.picture,
           googleId: decodedToken.sub,
+          role: "user",
         })
       }
 
@@ -77,5 +78,16 @@ const authMiddleware = async (req, res, next) => {
   }
 }
 
-module.exports = authMiddleware
+// Middleware to check if user is admin
+const adminMiddleware = async (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({
+      message: "Access denied. Admin privileges required.",
+      code: "auth/insufficient-permissions",
+    })
+  }
+  next()
+}
+
+module.exports = { authMiddleware, adminMiddleware }
 

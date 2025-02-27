@@ -10,7 +10,7 @@ export default function CustomResponses() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && (!user || user.role !== "admin")) {
       router.push("/")
     }
   }, [user, loading, router])
@@ -21,6 +21,10 @@ export default function CustomResponses() {
         <div className="text-center">Loading...</div>
       </div>
     )
+  }
+
+  if (user.role !== "admin") {
+    return null
   }
 
   return (

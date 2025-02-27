@@ -1,5 +1,5 @@
 const express = require("express")
-const authMiddleware = require("../middleware/auth")
+const { authMiddleware, adminMiddleware } = require("../middleware/auth")
 const multer = require("multer")
 const {
   addCustomResponse,
@@ -7,15 +7,11 @@ const {
   getSuggestions,
   getAttachment,
 } = require("../services/customResponseService")
-const { uploadFile } = require("../services/storageService")
+const { uploadFile, deleteFile } = require("../services/storageService")
 
 const router = express.Router()
 
-
-// Apply auth middleware to all routes
-router.use(authMiddleware)
-
-// Handle multiple files upload with custom response
+// Configure multer for memory storage
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -23,20 +19,18 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
-      // Images
       "image/jpeg",
       "image/png",
       "image/gif",
-      // Documents
       "application/pdf",
-      "application/msword", // .doc
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
-      "application/vnd.ms-excel", // .xls
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
-      "text/csv", // .csv
-      "application/vnd.ms-powerpoint", // .ppt
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
-      "text/plain", // .txt
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "text/csv",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "text/plain",
     ]
 
     if (allowedTypes.includes(file.mimetype)) {
@@ -49,19 +43,40 @@ const upload = multer({
     }
   },
 })
+
 // Apply auth middleware to all routes
 router.use(authMiddleware)
 
-router.post("/", upload.array("attachments", 5), async (req, res) => {
+// Get all custom responses (accessible to all authenticated users)
+router.get("/", async (req, res) => {
   try {
-    console.log("Request body:", req.body)
-    console.log("Files received:", req.files?.length || 0)
+    const responses = await getAllCustomResponses()
+    res.json(responses)
+  } catch (error) {
+    console.error("Error getting custom responses:", error)
+    res.status(500).json({ error: "Failed to get custom responses" })
+  }
+})
 
+// Get suggestions (accessible to all authenticated users)
+router.get("/suggestions", async (req, res) => {
+  try {
+    const { query } = req.query
+    const suggestions = await getSuggestions(query)
+    res.json(suggestions)
+  } catch (error) {
+    console.error("Error getting suggestions:", error)
+    res.status(500).json({ error: "Failed to get suggestions" })
+  }
+})
+
+// Routes that require admin privileges
+router.post("/", adminMiddleware, upload.array("attachments", 5), async (req, res) => {
+  try {
     const { category, keywords, response } = req.body
     const userId = req.user._id
     const files = req.files || []
 
-    // Validate required fields
     if (!category || !keywords || !response) {
       const missingFields = []
       if (!category) missingFields.push("category")
@@ -73,7 +88,6 @@ router.post("/", upload.array("attachments", 5), async (req, res) => {
       })
     }
 
-    // Parse and validate keywords
     let parsedKeywords
     try {
       parsedKeywords = JSON.parse(keywords)
@@ -84,7 +98,6 @@ router.post("/", upload.array("attachments", 5), async (req, res) => {
       return res.status(400).json({ error: "Invalid keywords format" })
     }
 
-    // Upload files to Cloudinary
     const attachments = []
     for (const file of files) {
       try {
@@ -92,7 +105,6 @@ router.post("/", upload.array("attachments", 5), async (req, res) => {
         attachments.push(uploadedFile)
       } catch (error) {
         console.error("File upload error:", error)
-        // Clean up any files that were already uploaded
         for (const attachment of attachments) {
           try {
             await deleteFile(attachment.filename)
@@ -104,9 +116,7 @@ router.post("/", upload.array("attachments", 5), async (req, res) => {
       }
     }
 
-    // Create custom response
     const newResponse = await addCustomResponse(category, parsedKeywords, response, userId, attachments)
-
     res.status(201).json(newResponse)
   } catch (error) {
     console.error("Error adding custom response:", error)
@@ -114,49 +124,18 @@ router.post("/", upload.array("attachments", 5), async (req, res) => {
   }
 })
 
-// Get attachment
+// Get attachment (accessible to all authenticated users)
 router.get("/attachment/:id/:filename", async (req, res) => {
   try {
     const { id, filename } = req.params
-    const userId = req.user._id
-
-    const file = await getAttachment(id, filename, userId)
+    const file = await getAttachment(id, filename)
     if (!file) {
       return res.status(404).json({ error: "File not found" })
     }
-
     res.redirect(file.storageUrl)
   } catch (error) {
     console.error("Error getting attachment:", error)
     res.status(500).json({ error: "Failed to get attachment" })
-  }
-})
-
-// Get all custom responses
-router.get("/", async (req, res) => {
-  try {
-    const userId = req.user._id
-    const responses = await getAllCustomResponses(userId)
-    res.json(responses)
-  } catch (error) {
-    console.error("Error getting custom responses:", error)
-    res.status(500).json({ error: "Failed to get custom responses" })
-  }
-})
-
-// Get suggestions
-router.get("/suggestions", async (req, res) => {
-  try {
-    const query = req.query.query || ""
-    const userId = req.user._id
-
-    console.log("Processing suggestion request:", { query, userId })
-
-    const suggestions = await getSuggestions(query, userId)
-    res.json(suggestions)
-  } catch (error) {
-    console.error("Error getting suggestions:", error)
-    res.status(500).json({ error: "Failed to get suggestions" })
   }
 })
 

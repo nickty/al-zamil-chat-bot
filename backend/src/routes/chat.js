@@ -1,6 +1,6 @@
 const express = require("express")
 const { generateResponse, getChatHistory } = require("../services/chatService")
-const authMiddleware  = require("../middleware/auth")
+const {authMiddleware}  = require("../middleware/auth")
 
 const router = express.Router()
 

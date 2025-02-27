@@ -26,12 +26,24 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = []
 }
 
+// Add request interceptor
 api.interceptors.request.use(
-  (config) => {
-    const token = getAuthToken()
+  async (config) => {
+    let token = getAuthToken()
+
+    // If no token or token is about to expire, try to refresh
+    if (!token && !isRefreshing) {
+      try {
+        token = await refreshAuthToken()
+      } catch (error) {
+        console.error("Token refresh failed:", error)
+      }
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+
     return config
   },
   (error) => {
@@ -39,52 +51,56 @@ api.interceptors.request.use(
   },
 )
 
+// Add response interceptor
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
 
-    // If error is not auth related or we've already tried to refresh
-    if (!error.response || error.response.status !== 401 || originalRequest._retry) {
-      return Promise.reject(error)
-    }
+    // Check if error is auth-related and we haven't retried yet
+    if (
+      error.response?.status === 401 &&
+      error.response?.data?.code === "auth/id-token-expired" &&
+      !originalRequest._retry
+    ) {
+      if (isRefreshing) {
+        try {
+          const token = await new Promise<string>((resolve, reject) => {
+            failedQueue.push({ resolve, reject })
+          })
+          originalRequest.headers.Authorization = `Bearer ${token}`
+          return api(originalRequest)
+        } catch (err) {
+          return Promise.reject(err)
+        }
+      }
 
-    if (isRefreshing) {
-      // If token refresh is in progress, queue the request
+      originalRequest._retry = true
+      isRefreshing = true
+
       try {
-        const token = await new Promise<string>((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        })
+        const token = await refreshAuthToken()
+        if (!token) {
+          throw new Error("Failed to refresh token")
+        }
+
+        processQueue(null, token)
         originalRequest.headers.Authorization = `Bearer ${token}`
         return api(originalRequest)
-      } catch (err) {
-        return Promise.reject(err)
+      } catch (refreshError) {
+        processQueue(refreshError, null)
+        window.location.href = "/" // Redirect to login
+        return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
       }
     }
 
-    originalRequest._retry = true
-    isRefreshing = true
-
-    try {
-      const newToken = await refreshAuthToken()
-      if (!newToken) {
-        throw new Error("Failed to refresh token")
-      }
-
-      processQueue(null, newToken)
-      originalRequest.headers.Authorization = `Bearer ${newToken}`
-      return api(originalRequest)
-    } catch (refreshError) {
-      processQueue(refreshError, null)
-      // Redirect to login page
-      window.location.href = "/"
-      return Promise.reject(refreshError)
-    } finally {
-      isRefreshing = false
-    }
+    return Promise.reject(error)
   },
 )
 
+// Export API methods
 export async function addCustomResponse(formData: FormData) {
   try {
     const response = await api.post("/custom-responses", formData, {
@@ -92,11 +108,6 @@ export async function addCustomResponse(formData: FormData) {
         "Content-Type": "multipart/form-data",
       },
     })
-
-    if (!response.data) {
-      throw new Error("No data received from server")
-    }
-
     return response.data
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.data?.error) {
@@ -122,7 +133,7 @@ export async function fetchChatHistory() {
     return response.data
   } catch (error) {
     console.error("Error fetching chat history:", error)
-    return []
+    throw error
   }
 }
 

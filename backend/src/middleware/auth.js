@@ -6,23 +6,28 @@ const authMiddleware = async (req, res, next) => {
     const token = req.headers.authorization?.split("Bearer ")[1]
 
     if (!token) {
-      return res.status(401).json({ message: "No token provided" })
+      return res.status(401).json({
+        message: "No token provided",
+        code: "auth/no-token",
+      })
     }
 
     try {
       const decodedToken = await admin.auth().verifyIdToken(token)
 
-      // Check token expiration
+      // Check token expiration with 5-minute buffer
       const tokenExp = decodedToken.exp * 1000 // Convert to milliseconds
       const now = Date.now()
+      const fiveMinutes = 5 * 60 * 1000
 
-      if (tokenExp < now) {
+      if (tokenExp < now + fiveMinutes) {
         return res.status(401).json({
-          message: "Token expired",
+          message: "Token expired or about to expire",
           code: "auth/id-token-expired",
         })
       }
 
+      // Find or create user
       let user = await User.findOne({ googleId: decodedToken.sub })
 
       if (!user) {
@@ -34,12 +39,23 @@ const authMiddleware = async (req, res, next) => {
         })
       }
 
+      // Update user info if changed
+      if (
+        user.email !== decodedToken.email ||
+        user.name !== decodedToken.name ||
+        user.picture !== decodedToken.picture
+      ) {
+        user.email = decodedToken.email
+        user.name = decodedToken.name
+        user.picture = decodedToken.picture
+        await user.save()
+      }
+
       req.user = user
       next()
     } catch (verifyError) {
       console.error("Token verification failed:", verifyError)
 
-      // Send specific error for expired tokens
       if (verifyError.code === "auth/id-token-expired") {
         return res.status(401).json({
           message: "Token expired",
@@ -47,11 +63,17 @@ const authMiddleware = async (req, res, next) => {
         })
       }
 
-      return res.status(401).json({ message: "Invalid token" })
+      return res.status(401).json({
+        message: "Invalid token",
+        code: "auth/invalid-token",
+      })
     }
   } catch (error) {
     console.error("Auth middleware error:", error)
-    res.status(500).json({ message: "Internal server error" })
+    res.status(500).json({
+      message: "Internal server error",
+      code: "auth/server-error",
+    })
   }
 }
 

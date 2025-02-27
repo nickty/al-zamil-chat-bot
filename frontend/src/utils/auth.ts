@@ -10,6 +10,7 @@ export interface User {
 
 const AUTH_KEY = "zhi_auth_user"
 const TOKEN_KEY = "zhi_auth_token"
+const TOKEN_EXPIRY_KEY = "zhi_auth_token_expiry"
 
 export function getCurrentUser(): User | null {
   const stored = localStorage.getItem(AUTH_KEY)
@@ -17,16 +18,31 @@ export function getCurrentUser(): User | null {
 }
 
 export function getAuthToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY)
+  const token = localStorage.getItem(TOKEN_KEY)
+  const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY)
+
+  if (!token || !expiry) {
+    return null
+  }
+
+  // Check if token is about to expire (within 5 minutes)
+  if (Date.now() >= Number.parseInt(expiry) - 5 * 60 * 1000) {
+    return null
+  }
+
+  return token
 }
 
 export function setCurrentUser(user: User | null, token: string | null) {
   if (user && token) {
     localStorage.setItem(AUTH_KEY, JSON.stringify(user))
     localStorage.setItem(TOKEN_KEY, token)
+    // Set token expiry (1 hour from now)
+    localStorage.setItem(TOKEN_EXPIRY_KEY, (Date.now() + 3600 * 1000).toString())
   } else {
     localStorage.removeItem(AUTH_KEY)
     localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(TOKEN_EXPIRY_KEY)
   }
 }
 
@@ -39,7 +55,8 @@ export async function refreshAuthToken(): Promise<string | null> {
       throw new Error("No user signed in")
     }
 
-    const idToken = await currentUser.getIdToken(true) // Force refresh
+    // Force refresh the token
+    const idToken = await currentUser.getIdToken(true)
 
     // Verify the new token with backend
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-token`, {
@@ -59,6 +76,8 @@ export async function refreshAuthToken(): Promise<string | null> {
     return idToken
   } catch (error) {
     console.error("Token refresh error:", error)
+    // Clear user data on refresh failure
+    setCurrentUser(null, null)
     return null
   }
 }

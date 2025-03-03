@@ -185,3 +185,81 @@ export async function updateCustomResponse(id: string, formData: FormData) {
   }
 }
 
+// Engineering API methods
+export async function analyzeEngineering(formData: FormData) {
+  try {
+    const response = await api.post("/engineering/analyze", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+    return response.data
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.data?.error) {
+      throw new Error(error.response.data.error)
+    }
+    throw error
+  }
+}
+
+export async function getEngineeringAnalysis(projectId: string) {
+  try {
+    const response = await api.get(`/engineering/analysis/${projectId}`)
+    return response.data
+  } catch (error) {
+    console.error("Error fetching engineering analysis:", error)
+    throw error
+  }
+}
+
+export async function getEngineeringStandards(type: string) {
+  try {
+    const response = await api.get(`/engineering/standards/${type}`)
+    return response.data
+  } catch (error) {
+    console.error("Error fetching engineering standards:", error)
+    throw error
+  }
+}
+
+// Production API methods
+export async function getProductionMetrics() {
+  try {
+    const response = await api.get("/production/metrics")
+    return response.data
+  } catch (error) {
+    console.error("Error fetching production metrics:", error)
+    throw error
+  }
+}
+
+export async function updateProductionMetrics(metrics: {
+  productionStatus: any
+  workforceStatus: any
+  equipmentStatus: any
+  qualityMetrics: any
+}) {
+  try {
+    const response = await api.post("/production/metrics", metrics)
+    return response.data
+  } catch (error) {
+    console.error("Error updating production metrics:", error)
+    throw error
+  }
+}
+
+export async function getProductionAnalytics(startDate: Date, endDate: Date) {
+  try {
+    const response = await api.get("/production/analytics", {
+      params: {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      },
+    })
+    return response.data
+  } catch (error) {
+    console.error("Error fetching production analytics:", error)
+    throw error
+  }
+}
+

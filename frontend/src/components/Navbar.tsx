@@ -42,6 +42,12 @@ export default function Navbar() {
               <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
                 Admin Dashboard
               </Link>
+              <Link href="/engineering-assistant" className="text-sm text-muted-foreground hover:text-foreground">
+                Engineering Assistant
+              </Link>
+              <Link href="/production-intelligence" className="text-sm text-muted-foreground hover:text-foreground">
+                Production Intelligence
+              </Link>
               <Link href="/custom-responses" className="text-sm text-muted-foreground hover:text-foreground">
                 Manage Responses
               </Link>

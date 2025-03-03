@@ -11,4 +11,3 @@ function getCache(key) {
 }
 
 module.exports = { setCache, getCache }
-

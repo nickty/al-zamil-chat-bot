@@ -5,6 +5,9 @@ const { chatRouter } = require("./routes/chat")
 const customResponseRouter = require("./routes/customResponse")
 const { errorHandler } = require("./middleware/errorHandler")
 
+const engineeringRouter = require("./routes/engineering")
+const productionRouter = require("./routes/production")
+
 
 const app = express()
 
@@ -14,6 +17,10 @@ app.use(express.json())
 app.use("/api/auth", authRouter)
 app.use("/api/chat", chatRouter)
 app.use("/api/custom-responses", customResponseRouter)
+
+app.use("/api/engineering", engineeringRouter)
+app.use("/api/production", productionRouter)
+
 
 app.use(errorHandler)
 

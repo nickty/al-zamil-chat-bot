@@ -186,7 +186,36 @@ export async function updateCustomResponse(id: string, formData: FormData) {
 }
 
 // Engineering API methods
-export async function analyzeEngineering(formData: FormData) {
+export interface EngineeringAnalysis {
+  projectId: string
+  equipmentType: string
+  drawings: Array<{
+    filename: string
+    originalName: string
+    storageUrl: string
+  }>
+  analysis: {
+    specifications: string[]
+    materials: Array<{
+      name: string
+      quantity: number
+      unit: string
+      estimatedCost: number
+    }>
+    recommendations: string[]
+    compliance: {
+      status: "pass" | "warning" | "fail"
+      details: string[]
+      standards: {
+        asme: boolean
+        iso: boolean
+        api: boolean
+      }
+    }
+  }
+}
+
+export async function analyzeEngineering(formData: FormData): Promise<EngineeringAnalysis> {
   try {
     const response = await api.post("/engineering/analyze", formData, {
       headers: {
@@ -202,7 +231,7 @@ export async function analyzeEngineering(formData: FormData) {
   }
 }
 
-export async function getEngineeringAnalysis(projectId: string) {
+export async function getEngineeringAnalysis(projectId: string): Promise<EngineeringAnalysis> {
   try {
     const response = await api.get(`/engineering/analysis/${projectId}`)
     return response.data
@@ -212,7 +241,11 @@ export async function getEngineeringAnalysis(projectId: string) {
   }
 }
 
-export async function getEngineeringStandards(type: string) {
+export async function getEngineeringStandards(type: string): Promise<{
+  name: string
+  description: string
+  version: string
+}> {
   try {
     const response = await api.get(`/engineering/standards/${type}`)
     return response.data

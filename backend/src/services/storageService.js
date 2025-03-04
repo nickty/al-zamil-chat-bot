@@ -3,6 +3,8 @@ const { Readable } = require("stream")
 
 async function uploadFile(file, userId) {
   try {
+    console.log("Uploading file to storage:", file.originalname)
+
     if (!file || !file.buffer) {
       throw new Error("Invalid file object")
     }
@@ -20,10 +22,12 @@ async function uploadFile(file, userId) {
         },
         (error, result) => {
           if (error) {
-            console.error("Cloudinary upload error:", error)
+            console.error("Storage upload error:", error)
             reject(error)
             return
           }
+
+          console.log("File uploaded successfully:", result.public_id)
 
           resolve({
             filename: result.public_id,

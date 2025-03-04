@@ -12,71 +12,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-interface Analysis {
-  projectId: string
-  equipmentType: string
-  drawings: Array<{
-    filename: string
-    originalName: string
-    storageUrl: string
-  }>
-  analysis: {
-    specifications: string[]
-    materials: Array<{
-      name: string
-      quantity: number
-      unit: string
-      estimatedCost: number
-    }>
-    recommendations: string[]
-    compliance: {
-      status: "pass" | "warning" | "fail"
-      details: string[]
-      standards: {
-        asme: boolean
-        iso: boolean
-        api: boolean
-      }
-    }
-  }
-}
-
-async function analyzeEngineering(formData: FormData): Promise<Analysis> {
-  const response = await fetch("/api/engineering/analyze", {
-    method: "POST",
-    body: formData,
-  })
-
-  if (!response.ok) {
-    throw new Error("Analysis failed")
-  }
-
-  return (await response.json()) as Analysis
-}
+import { analyzeEngineering, type EngineeringAnalysis } from "@/utils/api"
 
 export default function EngineeringPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [equipmentType, setEquipmentType] = useState("")
   const [analyzing, setAnalyzing] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [analysis, setAnalysis] = useState<Analysis | null>(null)
+  const [analysis, setAnalysis] = useState<EngineeringAnalysis | null>(null)
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      const allowedTypes = [
-        "application/acad",
-        "image/vnd.dxf",
-        "application/dxf",
-        "application/dwg",
-        "image/x-dwg",
-        "application/pdf",
-        "image/jpeg",
-        "image/png",
-      ]
+      // Accept files based on extension rather than just MIME type
+      // as browser MIME type detection can be inconsistent
+      const fileName = file.name.toLowerCase()
+      const validExtensions = [".dwg", ".dxf", ".pdf", ".jpg", ".jpeg", ".png"]
 
-      if (allowedTypes.includes(file.type)) {
+      if (validExtensions.some((ext) => fileName.endsWith(ext))) {
         setSelectedFile(file)
       } else {
         toast.error("Please select a valid CAD file (DWG, DXF), PDF, or image")
@@ -109,16 +62,17 @@ export default function EngineeringPage() {
         })
       }, 500)
 
-      const analysis = await analyzeEngineering(formData)
+      // Use the API utility function
+      const analysisResult = await analyzeEngineering(formData)
 
       clearInterval(progressInterval)
       setUploadProgress(100)
 
-      setAnalysis(analysis)
+      setAnalysis(analysisResult)
       toast.success("Analysis completed successfully")
     } catch (error) {
       console.error("Analysis error:", error)
-      toast.error("Failed to analyze drawing")
+      toast.error(error instanceof Error ? error.message : "Failed to analyze drawing")
     } finally {
       setAnalyzing(false)
     }

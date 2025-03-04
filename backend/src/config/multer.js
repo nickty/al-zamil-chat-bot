@@ -5,22 +5,30 @@ const storage = multer.memoryStorage()
 
 // File filter function
 const fileFilter = (req, file, cb) => {
-  // Allow CAD files and common engineering drawing formats
+  // Allow CAD files, PDFs, and common image formats
   const allowedTypes = [
-    "application/acad", // AutoCAD
-    "image/vnd.dxf", // DXF
-    "application/dxf", // DXF
-    "application/dwg", // DWG
-    "image/x-dwg", // DWG
-    "application/pdf", // PDF
-    "image/jpeg", // JPEG
-    "image/png", // PNG
+    "application/acad",
+    "image/vnd.dxf",
+    "application/dxf",
+    "application/dwg",
+    "image/x-dwg",
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/jpg",
   ]
 
-  if (allowedTypes.includes(file.mimetype)) {
+  // For files that might not have the exact MIME type
+  const allowedExtensions = [".dwg", ".dxf", ".pdf", ".jpg", ".jpeg", ".png"]
+  const fileExtension = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf("."))
+
+  if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(fileExtension)) {
     cb(null, true)
   } else {
-    cb(new Error("Invalid file type. Only CAD files (DWG, DXF), PDFs, and images are allowed."), false)
+    cb(
+      new Error(`Invalid file type: ${file.mimetype}. Only CAD files (DWG, DXF), PDFs, and images are allowed.`),
+      false,
+    )
   }
 }
 

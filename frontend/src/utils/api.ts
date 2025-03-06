@@ -296,3 +296,56 @@ export async function getProductionAnalytics(startDate: Date, endDate: Date) {
   }
 }
 
+// Add these functions to your existing api.ts file
+
+export interface User {
+  _id: string
+  name: string
+  email: string
+  picture: string
+  role: "user" | "admin"
+  suspended: boolean
+  lastLogin: string
+  createdAt: string
+}
+
+export async function getAllUsers(): Promise<User[]> {
+  try {
+    const response = await api.get("/users")
+    return response.data
+  } catch (error) {
+    console.error("Error fetching users:", error)
+    throw error
+  }
+}
+
+export async function getUserById(id: string): Promise<User> {
+  try {
+    const response = await api.get(`/users/${id}`)
+    return response.data
+  } catch (error) {
+    console.error("Error fetching user:", error)
+    throw error
+  }
+}
+
+export async function updateUserSuspension(id: string, suspended: boolean): Promise<User> {
+  try {
+    const response = await api.patch(`/users/${id}/suspend`, { suspended })
+    return response.data
+  } catch (error) {
+    console.error("Error updating user suspension:", error)
+    throw error
+  }
+}
+
+export async function updateUserRole(id: string, role: "user" | "admin"): Promise<User> {
+  try {
+    const response = await api.patch(`/users/${id}/role`, { role })
+    return response.data
+  } catch (error) {
+    console.error("Error updating user role:", error)
+    throw error
+  }
+}
+

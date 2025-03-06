@@ -105,7 +105,15 @@ export async function signInWithGoogle(): Promise<User> {
     })
 
     if (!response.ok) {
-      throw new Error("Failed to verify token")
+      const errorData = await response.json()
+
+      // Handle suspended account
+      if (errorData.code === "auth/account-suspended") {
+        throw new Error("Your account has been suspended. Please contact an administrator.")
+      }
+
+      console.error("Token verification failed:", errorData)
+      throw new Error(errorData.message || "Failed to verify token")
     }
 
     const data = await response.json()

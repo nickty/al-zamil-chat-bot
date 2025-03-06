@@ -37,9 +37,18 @@ router.post("/verify-token", async (req, res) => {
           name: decodedToken.name,
           picture: decodedToken.picture,
           googleId: decodedToken.sub,
+          lastLogin: new Date(),
         })
       } else {
-        // Update user info if changed
+        // Check if user is suspended
+        if (user.suspended) {
+          return res.status(403).json({
+            message: "Your account has been suspended. Please contact an administrator.",
+            code: "auth/account-suspended",
+          })
+        }
+
+        // Update user info if changed and update last login
         if (
           user.email !== decodedToken.email ||
           user.name !== decodedToken.name ||
@@ -48,8 +57,10 @@ router.post("/verify-token", async (req, res) => {
           user.email = decodedToken.email
           user.name = decodedToken.name
           user.picture = decodedToken.picture
-          await user.save()
         }
+
+        user.lastLogin = new Date()
+        await user.save()
       }
 
       res.json({
@@ -58,7 +69,7 @@ router.post("/verify-token", async (req, res) => {
           email: user.email,
           name: user.name,
           picture: user.picture,
-          role: user.role, // Add this line
+          role: user.role,
         },
       })
     } catch (verifyError) {

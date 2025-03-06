@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useEffect, useState } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CustomResponseTable } from "../CustomResponseTable"
 import { CustomResponseDialog } from "../CustomResponseDialog"
+import { UserManagement } from "./UserManagement"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,12 +27,13 @@ export interface CustomResponse {
 }
 
 export function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState("responses")
   const [responses, setResponses] = useState<CustomResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedResponse, setSelectedResponse] = useState<CustomResponse | null>(null)
 
-  const fetchResponses = useCallback(async () => {
+  const fetchResponses = async () => {
     try {
       const data = await getAllCustomResponses()
       setResponses(data)
@@ -40,11 +43,11 @@ export function AdminDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }
 
   useEffect(() => {
     fetchResponses()
-  }, [fetchResponses])
+  }, [])
 
   const handleEdit = (response: CustomResponse) => {
     setSelectedResponse(response)
@@ -66,25 +69,49 @@ export function AdminDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Custom Responses Management</CardTitle>
-              <CardDescription>Manage your custom responses and their attachments</CardDescription>
-            </div>
-            <Button onClick={handleAdd}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Response
-            </Button>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Manage your system settings and users</p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <CustomResponseTable responses={responses} loading={loading} onEdit={handleEdit} onRefresh={fetchResponses} />
-        </CardContent>
-      </Card>
+          <TabsList>
+            <TabsTrigger value="responses">Custom Responses</TabsTrigger>
+            <TabsTrigger value="users">User Management</TabsTrigger>
+          </TabsList>
+        </div>
 
-      <CustomResponseDialog open={dialogOpen} onOpenChange={handleDialogClose} response={selectedResponse} />
+        <TabsContent value="responses">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Custom Responses Management</CardTitle>
+                  <CardDescription>Manage your custom responses and their attachments</CardDescription>
+                </div>
+                <Button onClick={handleAdd}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Response
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <CustomResponseTable
+                responses={responses}
+                loading={loading}
+                onEdit={handleEdit}
+                onRefresh={fetchResponses}
+              />
+            </CardContent>
+          </Card>
+
+          <CustomResponseDialog open={dialogOpen} onOpenChange={handleDialogClose} response={selectedResponse} />
+        </TabsContent>
+
+        <TabsContent value="users">
+          <UserManagement />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

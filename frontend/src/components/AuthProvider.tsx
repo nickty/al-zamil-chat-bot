@@ -1,3 +1,5 @@
+// Update the AuthProvider to handle suspended accounts
+
 "use client"
 
 import type React from "react"

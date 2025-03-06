@@ -37,18 +37,29 @@ const authMiddleware = async (req, res, next) => {
           picture: decodedToken.picture,
           googleId: decodedToken.sub,
           role: "user",
+          lastLogin: new Date(),
         })
-      }
+      } else {
+        // Check if user is suspended
+        if (user.suspended) {
+          return res.status(403).json({
+            message: "Your account has been suspended. Please contact an administrator.",
+            code: "auth/account-suspended",
+          })
+        }
 
-      // Update user info if changed
-      if (
-        user.email !== decodedToken.email ||
-        user.name !== decodedToken.name ||
-        user.picture !== decodedToken.picture
-      ) {
-        user.email = decodedToken.email
-        user.name = decodedToken.name
-        user.picture = decodedToken.picture
+        // Update user info if changed and update last login
+        if (
+          user.email !== decodedToken.email ||
+          user.name !== decodedToken.name ||
+          user.picture !== decodedToken.picture
+        ) {
+          user.email = decodedToken.email
+          user.name = decodedToken.name
+          user.picture = decodedToken.picture
+        }
+
+        user.lastLogin = new Date()
         await user.save()
       }
 

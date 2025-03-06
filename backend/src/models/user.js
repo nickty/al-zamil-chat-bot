@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema({
   picture: String,
   googleId: { type: String, required: true, unique: true },
   role: { type: String, enum: ["user", "admin"], default: "user" },
+  suspended: { type: Boolean, default: false },
+  lastLogin: { type: Date },
   createdAt: { type: Date, default: Date.now },
 })
 

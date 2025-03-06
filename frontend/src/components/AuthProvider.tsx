@@ -1,5 +1,3 @@
-// Update the AuthProvider to handle suspended accounts
-
 "use client"
 
 import type React from "react"
@@ -7,6 +5,7 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { type User, getCurrentUser } from "@/utils/auth"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 interface AuthContextType {
   user: User | null
@@ -29,9 +28,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    const currentUser = getCurrentUser()
-    setUser(currentUser)
-    setLoading(false)
+    const loadUser = async () => {
+      try {
+        const currentUser = getCurrentUser()
+        setUser(currentUser)
+      } catch (error) {
+        console.error("Error loading user:", error)
+        setError(error instanceof Error ? error.message : "Authentication error")
+        // Show error message to the user
+        if (error instanceof Error && error.message.includes("suspended")) {
+          toast.error(error.message)
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadUser()
   }, [])
 
   const value = {

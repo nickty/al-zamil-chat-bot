@@ -42,6 +42,7 @@ const authMiddleware = async (req, res, next) => {
       } else {
         // Check if user is suspended
         if (user.suspended) {
+          console.error(`Suspended account attempt: ${user.email}`)
           return res.status(403).json({
             message: "Your account has been suspended. Please contact an administrator.",
             code: "auth/account-suspended",

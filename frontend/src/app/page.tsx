@@ -8,6 +8,7 @@ import { useEffect, useState } from "react"
 import { fetchChatHistory } from "@/utils/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 interface Message {
   _id: string
@@ -38,6 +39,8 @@ export default function Home() {
       router.push("/") // Redirect using Next.js router
     } catch (error) {
       console.error("Sign in failed:", error)
+      // Show error message to the user
+      toast.error(error instanceof Error ? error.message : "Failed to sign in")
     }
   }
 

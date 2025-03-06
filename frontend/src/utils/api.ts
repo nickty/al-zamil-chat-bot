@@ -1,5 +1,7 @@
 import axios from "axios"
 import { getAuthToken, refreshAuthToken } from "./auth"
+import { toast } from "sonner"
+import { setCurrentUser } from "./auth"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -56,6 +58,20 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
+
+    // Check if error is due to suspended account
+    if (error.response?.status === 403 && error.response?.data?.code === "auth/account-suspended") {
+      // Show suspension notification
+      toast.error("Your account has been suspended. Please contact an administrator.")
+
+      // Clear user session
+      setCurrentUser(null, null)
+
+      // Redirect to home page
+      window.location.href = "/"
+
+      return Promise.reject(error)
+    }
 
     // Check if error is auth-related and we haven't retried yet
     if (

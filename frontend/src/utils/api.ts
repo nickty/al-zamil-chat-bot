@@ -167,9 +167,10 @@ export function getAttachmentUrl(responseId: string, filename: string) {
   return `${API_URL}/custom-responses/attachment/${responseId}/${filename}`
 }
 
+// Update the getAllCustomResponses function to include a query parameter to populate user data
 export async function getAllCustomResponses() {
   try {
-    const response = await api.get("/custom-responses")
+    const response = await api.get("/custom-responses?populate=user")
     return response.data
   } catch (error) {
     console.error("Error fetching custom responses:", error)

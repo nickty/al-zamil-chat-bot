@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getAllCustomResponses } from "@/utils/api"
 import { toast } from "sonner"
 
+// Update the CustomResponse interface to include userId as an alternative to createdBy
 export interface CustomResponse {
   _id: string
   category: string
@@ -23,6 +24,12 @@ export interface CustomResponse {
     size: number
     storageUrl: string
   }>
+  createdBy?: {
+    _id: string
+    name?: string
+    email: string
+  }
+  userId?: string | { _id: string; name?: string; email?: string }
   createdAt: string
 }
 
@@ -33,9 +40,11 @@ export function AdminDashboard() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedResponse, setSelectedResponse] = useState<CustomResponse | null>(null)
 
+  // Add a console.log in the fetchResponses function to debug the response data
   const fetchResponses = async () => {
     try {
       const data = await getAllCustomResponses()
+      console.log("Custom responses data:", data)
       setResponses(data)
     } catch (error) {
       console.error("Error fetching responses:", error)

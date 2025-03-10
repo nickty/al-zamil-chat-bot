@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
-import { LogOut, Settings } from "lucide-react"
+import { LogOut, Settings, Calculator } from "lucide-react"
 
 export default function Navbar() {
   const { user, loading, setUser } = useAuth()
@@ -36,17 +36,23 @@ export default function Navbar() {
           <Link href="/" className="text-xl font-bold">
             ZHI Assistant
           </Link>
-          {/* Only show Manage Responses link for admin users */}
+          {/* Only show admin links for admin users */}
           {user?.role === "admin" && (
             <>
               <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
                 Admin Dashboard
               </Link>
-              <Link href="/engineering-assistant" className="text-sm text-muted-foreground hover:text-foreground">
+              <Link href="/engineering" className="text-sm text-muted-foreground hover:text-foreground">
                 Engineering Assistant
               </Link>
-              <Link href="/production-intelligence" className="text-sm text-muted-foreground hover:text-foreground">
+              <Link href="/production" className="text-sm text-muted-foreground hover:text-foreground">
                 Production Intelligence
+              </Link>
+              <Link href="/estimation" className="text-sm text-muted-foreground hover:text-foreground">
+                <span className="flex items-center gap-2">
+                  <Calculator className="h-4 w-4" />
+                  Estimation
+                </span>
               </Link>
               <Link href="/custom-responses" className="text-sm text-muted-foreground hover:text-foreground">
                 Manage Responses
@@ -73,14 +79,22 @@ export default function Navbar() {
                 <DropdownMenuItem className="font-medium">{user.name}</DropdownMenuItem>
                 <DropdownMenuItem className="text-muted-foreground">{user.email}</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                {/* Only show Manage Responses option for admin users */}
+                {/* Only show admin options for admin users */}
                 {user?.role === "admin" && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/custom-responses" className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Manage Responses</span>
-                    </Link>
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/estimation" className="cursor-pointer">
+                        <Calculator className="mr-2 h-4 w-4" />
+                        <span>Estimation Tool</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/custom-responses" className="cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Manage Responses</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
                 )}
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />

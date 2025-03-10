@@ -366,3 +366,168 @@ export async function updateUserRole(id: string, role: "user" | "admin"): Promis
   }
 }
 
+// Add these interfaces and functions to your existing api.ts file
+
+// Client types
+export interface Client {
+  _id: string
+  name: string
+  contactPerson?: string
+  email?: string
+  phone?: string
+  address?: string
+  createdAt: string
+}
+
+// Estimation types
+export interface EstimationItem {
+  _id: string
+  name: string
+  description: string
+  quantity: number
+  unit: string
+  unitPrice: number
+  totalPrice: number
+  type: "material" | "labor" | "service"
+}
+
+export interface EstimationHistory {
+  _id: string
+  action: string
+  description: string
+  details?: any
+  user?: {
+    _id: string
+    name: string
+  }
+  timestamp: string
+}
+
+export interface EstimationSummary {
+  _id: string
+  title: string
+  description: string
+  estimationNumber: string
+  status: string
+  totalAmount: number
+  client: {
+    _id: string
+    name: string
+  }
+  createdAt: string
+}
+
+export interface EstimationDetail {
+  _id: string
+  title: string
+  description: string
+  estimationNumber: string
+  status: string
+  totalAmount: number
+  client: Client
+  items: EstimationItem[]
+  history: EstimationHistory[]
+  createdAt: string
+  updatedAt: string
+}
+
+// Client API functions
+export async function getClients(): Promise<Client[]> {
+  try {
+    const response = await api.get("/clients")
+    return response.data
+  } catch (error) {
+    console.error("Error fetching clients:", error)
+    throw error
+  }
+}
+
+export async function getClientById(id: string): Promise<Client> {
+  try {
+    const response = await api.get(`/clients/${id}`)
+    return response.data
+  } catch (error) {
+    console.error("Error fetching client:", error)
+    throw error
+  }
+}
+
+// Estimation API functions
+export async function getAllEstimations(): Promise<EstimationSummary[]> {
+  try {
+    const response = await api.get("/estimations")
+    return response.data
+  } catch (error) {
+    console.error("Error fetching estimations:", error)
+    throw error
+  }
+}
+
+export async function getEstimationById(id: string): Promise<EstimationDetail> {
+  try {
+    const response = await api.get(`/estimations/${id}`)
+    return response.data
+  } catch (error) {
+    console.error("Error fetching estimation:", error)
+    throw error
+  }
+}
+
+export async function createEstimation(data: any): Promise<EstimationDetail> {
+  try {
+    const response = await api.post("/estimations", data)
+    return response.data
+  } catch (error) {
+    console.error("Error creating estimation:", error)
+    throw error
+  }
+}
+
+export async function updateEstimation(id: string, data: any): Promise<EstimationDetail> {
+  try {
+    const response = await api.put(`/estimations/${id}`, data)
+    return response.data
+  } catch (error) {
+    console.error("Error updating estimation:", error)
+    throw error
+  }
+}
+
+export async function updateEstimationStatus(id: string, status: string): Promise<EstimationDetail> {
+  try {
+    const response = await api.patch(`/estimations/${id}/status`, { status })
+    return response.data
+  } catch (error) {
+    console.error("Error updating estimation status:", error)
+    throw error
+  }
+}
+
+export async function getEstimationDashboard() {
+  try {
+    const response = await api.get("/estimations/dashboard")
+    return response.data
+  } catch (error) {
+    console.error("Error fetching estimation dashboard:", error)
+    throw error
+  }
+}
+
+// Add this function to your existing api.ts file
+
+export async function createClient(data: {
+  name: string
+  contactPerson?: string
+  email?: string
+  phone?: string
+  address?: string
+}): Promise<Client> {
+  try {
+    const response = await api.post("/clients", data)
+    return response.data
+  } catch (error) {
+    console.error("Error creating client:", error)
+    throw error
+  }
+}
+

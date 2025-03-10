@@ -5,6 +5,8 @@ const { chatRouter } = require("./routes/chat")
 const customResponseRouter = require("./routes/customResponse")
 const { errorHandler } = require("./middleware/errorHandler")
 const usersRouter = require("./routes/users")
+const clientsRouter = require("./routes/clients")
+const estimationsRouter = require("./routes/estimations")
 const engineeringRouter = require("./routes/engineering")
 const productionRouter = require("./routes/production")
 
@@ -22,6 +24,9 @@ app.use("/api/engineering", engineeringRouter)
 app.use("/api/production", productionRouter)
 
 app.use("/api/users", usersRouter)
+
+app.use("/api/clients", clientsRouter)
+app.use("/api/estimations", estimationsRouter)
 
 
 app.use(errorHandler)

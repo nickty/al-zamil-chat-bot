@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
-import { LogOut, Settings, Calculator } from "lucide-react"
+import { LogOut, Settings, Calculator, DollarSign } from "lucide-react"
 
 export default function Navbar() {
   const { user, loading, setUser } = useAuth()
@@ -53,6 +53,12 @@ export default function Navbar() {
                   <Calculator className="h-4 w-4" />
                   Estimation
                 </span>
+              </Link>
+              <Link href="/finance" className="text-sm text-muted-foreground hover:text-foreground">
+                <div className="flex items-center gap-1">
+                  <DollarSign className="h-4 w-4" />
+                  <span>Finance</span>
+                </div>
               </Link>
               <Link href="/custom-responses" className="text-sm text-muted-foreground hover:text-foreground">
                 Manage Responses

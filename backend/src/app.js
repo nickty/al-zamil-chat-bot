@@ -9,6 +9,7 @@ const clientsRouter = require("./routes/clients")
 const estimationsRouter = require("./routes/estimations")
 const engineeringRouter = require("./routes/engineering")
 const productionRouter = require("./routes/production")
+const financeRouter = require("./routes/finance")
 
 
 const app = express()
@@ -27,6 +28,8 @@ app.use("/api/users", usersRouter)
 
 app.use("/api/clients", clientsRouter)
 app.use("/api/estimations", estimationsRouter)
+
+app.use("/api/finance", financeRouter) 
 
 
 app.use(errorHandler)

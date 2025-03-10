@@ -531,3 +531,56 @@ export async function createClient(data: {
   }
 }
 
+// Add these functions to your existing api.ts file for finance
+
+export async function getFinancialMetrics() {
+  try {
+    const response = await api.get("/finance/metrics")
+    return response.data
+  } catch (error) {
+    console.error("Error fetching financial metrics:", error)
+    throw error
+  }
+}
+
+export async function updateFinancialMetrics(data: any) {
+  try {
+    const response = await api.post("/finance/metrics", data)
+    return response.data
+  } catch (error) {
+    console.error("Error updating financial metrics:", error)
+    throw error
+  }
+}
+
+export async function getBudgetData() {
+  try {
+    const response = await api.get("/finance/budget")
+    return response.data
+  } catch (error) {
+    console.error("Error fetching budget data:", error)
+    throw error
+  }
+}
+
+export async function updateBudget(data: any) {
+  try {
+    const response = await api.post("/finance/budget", data)
+    return response.data
+  } catch (error) {
+    console.error("Error updating budget:", error)
+    throw error
+  }
+}
+
+export async function getFinancialReports(type: string, startDate: string, endDate: string) {
+  try {
+    const response = await api.get(`/finance/reports`, {
+      params: { type, startDate, endDate },
+    })
+    return response.data
+  } catch (error) {
+    console.error("Error fetching financial reports:", error)
+    throw error
+  }
+}
